@@ -10,6 +10,9 @@ Use directly from Git for now (until published):
 uv add "browsers-sdk @ git+https://github.com/morph-labs/browsers-sdk.git@main#subdirectory=sdks/python"
 ```
 
+This package registers a MorphCloud plugin automatically. After install,
+`MorphCloudClient()` will expose `client.browsers` and `client.browsers_async`.
+
 ## Generate SDKs
 
 ```
@@ -20,6 +23,28 @@ make generate-python-sdk
 This will fetch the OpenAPI from the running service and generate clients into `sdks/python` and `sdks/typescript` (configurable in `fern/generators.yml`).
 
 ## Example (Python + Playwright)
+
+Recommended (plugin-based):
+
+```python
+import os
+from morphcloud.api import MorphCloudClient
+from playwright.sync_api import sync_playwright
+
+os.environ.setdefault("MORPH_BROWSERS_BASE_URL", "https://browsers.svc.cloud.morph.so")
+client = MorphCloudClient()  # loads browsers plugin automatically
+
+sess = client.browsers.create_session(name="demo")
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(sess.connect_url)
+    page = browser.new_page()
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
+client.browsers.stop_session(sess.id)
+```
+
+Direct client (without plugin):
 
 ```python
 import os
