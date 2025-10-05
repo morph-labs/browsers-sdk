@@ -56,3 +56,10 @@ await browser.close();
 
 await api.stopSession(sess.id);
 ```
+
+## CI + Publish
+
+- SDKs are auto-regenerated on changes to `fern/**` via `.github/workflows/generate.yml`.
+- Publishing is triggered on GitHub releases:
+  - PyPI: `.github/workflows/publish-python.yml` expects `PYPI_API_TOKEN` in repo secrets.
+  - npm: `.github/workflows/publish-npm.yml` expects `NPM_TOKEN` in repo secrets.
