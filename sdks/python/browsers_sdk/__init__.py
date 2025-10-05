@@ -68,7 +68,12 @@ class AsyncBrowsersApi:
 def _resolve_base_url(explicit: _t.Optional[str] = None) -> str:
     if explicit:
         return explicit
-    return os.environ.get("BROWSERS_BASE_URL", "https://browsers.svc.cloud.morph.so")
+    # Prefer MORPH_BROWSERS_BASE_URL; fall back to legacy BROWSERS_BASE_URL
+    return (
+        os.environ.get("MORPH_BROWSERS_BASE_URL")
+        or os.environ.get("BROWSERS_BASE_URL")
+        or "https://browsers.svc.cloud.morph.so"
+    )
 
 
 def create_service_client(morph_client, browsers_base_url: _t.Optional[str] = None) -> BrowsersApi:

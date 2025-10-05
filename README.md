@@ -26,7 +26,7 @@ import os
 from browsers_sdk import BrowsersApi  # generated package name may vary
 from playwright.sync_api import sync_playwright
 
-api = BrowsersApi(base_url=os.environ["BROWSERS_BASE_URL"], token=os.environ["MORPH_API_KEY"])  # bearer auth
+api = BrowsersApi(base_url=os.environ.get("MORPH_BROWSERS_BASE_URL", "https://browsers.svc.cloud.morph.so"), token=os.environ["MORPH_API_KEY"])  # bearer auth
 sess = api.create_session(name="demo")
 
 with sync_playwright() as p:
