@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "target": "ES2019",
-    "module": "ESNext",
+    "module": "CommonJS",
     "declaration": true,
     "moduleResolution": "Bundler",
     "skipLibCheck": true,
@@ -14,4 +14,3 @@
   "include": ["**/*.ts"],
   "exclude": ["dist", "node_modules"]
 }
-
