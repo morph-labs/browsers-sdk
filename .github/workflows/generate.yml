@@ -1,0 +1,44 @@
+name: Generate SDKs
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'fern/**'
+      - '.github/workflows/generate.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install generators
+        run: |
+          npm i -g openapi-typescript-codegen
+          pip install openapi-python-client uv
+      - name: Generate TypeScript SDK
+        run: |
+          npx --yes openapi-typescript-codegen --input fern/openapi.json --output sdks/typescript --client axios --name BrowsersApi
+      - name: Generate Python SDK
+        run: |
+          openapi-python-client generate --path fern/openapi.json --meta uv --overwrite --output-path sdks/python --config python-client-config.yaml
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'chore(ci): regenerate SDKs from OpenAPI'
+          add: 'sdks'
+
