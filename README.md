@@ -19,3 +19,40 @@ make generate-python-sdk
 
 This will fetch the OpenAPI from the running service and generate clients into `sdks/python` and `sdks/typescript` (configurable in `fern/generators.yml`).
 
+## Example (Python + Playwright)
+
+```python
+import os
+from browsers_sdk import BrowsersApi  # generated package name may vary
+from playwright.sync_api import sync_playwright
+
+api = BrowsersApi(base_url=os.environ["BROWSERS_BASE_URL"], token=os.environ["MORPH_API_KEY"])  # bearer auth
+sess = api.create_session(name="demo")
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(sess.connect_url)
+    page = browser.new_page()
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
+
+api.stop_session(sess.id)
+```
+
+## Example (TypeScript + Playwright)
+
+```ts
+import { chromium } from 'playwright';
+import { BrowsersApi } from './sdks/typescript';
+
+const api = new BrowsersApi({ baseUrl: process.env.BROWSERS_BASE_URL!, token: process.env.MORPH_API_KEY! });
+const sess = await api.createSession({ name: 'demo' });
+
+const browser = await chromium.connectOverCDP(sess.connectUrl);
+const page = await browser.newPage();
+await page.goto('https://example.com');
+console.log(await page.title());
+await browser.close();
+
+await api.stopSession(sess.id);
+```
