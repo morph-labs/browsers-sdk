@@ -2,6 +2,26 @@
   "openapi": "3.1.0",
   "info": {"title": "Morph Browsers Service", "version": "0.1.0"},
   "paths": {
+    "/sign-up": {
+      "post": {
+        "summary": "Sign Up User",
+        "operationId": "sign_up",
+        "security": [{"HTTPBearer": []}],
+        "responses": {
+          "200": {"description": "OK", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Message"}}}}
+        }
+      }
+    },
+    "/login": {
+      "get": {
+        "summary": "Login Check",
+        "operationId": "login",
+        "security": [{"HTTPBearer": []}],
+        "responses": {
+          "200": {"description": "OK", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Message"}}}}
+        }
+      }
+    },
     "/session": {
       "get": {
         "summary": "List Sessions",
@@ -47,6 +67,14 @@
   },
   "components": {
     "schemas": {
+      "Message": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": {"type": "string", "title": "Message"}
+        },
+        "title": "Message"
+      },
       "Session": {
         "type": "object",
         "required": ["id", "name", "vcpus", "memory", "disk_size", "cdp_url", "connect_url"],
@@ -76,4 +104,3 @@
     "securitySchemes": {"HTTPBearer": {"type": "http", "scheme": "bearer"}}
   }
 }
-

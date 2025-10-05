@@ -2,12 +2,35 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Message } from '../models/Message';
 import type { Session } from '../models/Session';
 import type { SessionList } from '../models/SessionList';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class DefaultService {
     constructor(public readonly httpRequest: BaseHttpRequest) {}
+    /**
+     * Sign Up User
+     * @returns Message OK
+     * @throws ApiError
+     */
+    public signUp(): CancelablePromise<Message> {
+        return this.httpRequest.request({
+            method: 'POST',
+            url: '/sign-up',
+        });
+    }
+    /**
+     * Login Check
+     * @returns Message OK
+     * @throws ApiError
+     */
+    public login(): CancelablePromise<Message> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/login',
+        });
+    }
     /**
      * List Sessions
      * @returns SessionList OK
