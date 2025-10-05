@@ -11,7 +11,6 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { HTTPValidationError } from './models/HTTPValidationError';
-export type { Message } from './models/Message';
 export type { Session } from './models/Session';
 export type { SessionList } from './models/SessionList';
 export type { ValidationError } from './models/ValidationError';
