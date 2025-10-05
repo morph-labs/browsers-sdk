@@ -1,0 +1,79 @@
+{
+  "openapi": "3.1.0",
+  "info": {"title": "Morph Browsers Service", "version": "0.1.0"},
+  "paths": {
+    "/session": {
+      "get": {
+        "summary": "List Sessions",
+        "operationId": "list_sessions",
+        "security": [{"HTTPBearer": []}],
+        "responses": {"200": {"description": "OK", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SessionList"}}}}}
+      },
+      "post": {
+        "summary": "Create Session",
+        "operationId": "create_session",
+        "security": [{"HTTPBearer": []}],
+        "parameters": [
+          {"name": "name", "in": "query", "required": false, "schema": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Name"}}
+        ],
+        "responses": {"200": {"description": "OK", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Session"}}}}, "422": {"description": "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}}
+      }
+    },
+    "/session/{id}": {
+      "get": {
+        "summary": "Get Session",
+        "operationId": "get_session",
+        "security": [{"HTTPBearer": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string", "title": "Id"}}],
+        "responses": {"200": {"description": "OK", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Session"}}}}, "422": {"description": "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}}
+      },
+      "delete": {
+        "summary": "Stop Session",
+        "operationId": "stop_session",
+        "security": [{"HTTPBearer": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string", "title": "Id"}}],
+        "responses": {"200": {"description": "OK", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Session"}}}}, "422": {"description": "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}}
+      }
+    },
+    "/session/{name}/by-name": {
+      "get": {
+        "summary": "Get Session By Name",
+        "operationId": "get_session_by_name",
+        "security": [{"HTTPBearer": []}],
+        "parameters": [{"name": "name", "in": "path", "required": true, "schema": {"type": "string", "title": "Name"}}],
+        "responses": {"200": {"description": "OK", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Session"}}}}, "422": {"description": "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}}
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Session": {
+        "type": "object",
+        "required": ["id", "name", "vcpus", "memory", "disk_size", "cdp_url", "connect_url"],
+        "properties": {
+          "id": {"type": "string", "title": "Id"},
+          "name": {"type": "string", "title": "Name"},
+          "vcpus": {"type": "integer", "title": "Vcpus"},
+          "memory": {"type": "integer", "title": "Memory"},
+          "disk_size": {"type": "integer", "title": "Disk Size"},
+          "cdp_url": {"type": "string", "title": "Cdp Url"},
+          "connect_url": {"type": "string", "title": "Connect Url"}
+        },
+        "title": "Session"
+      },
+      "SessionList": {
+        "type": "object",
+        "required": ["count", "data"],
+        "properties": {
+          "count": {"type": "integer", "title": "Count"},
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/Session"}, "title": "Data"}
+        },
+        "title": "SessionList"
+      },
+      "ValidationError": {"type": "object", "required": ["loc", "msg", "type"], "properties": {"loc": {"type": "array", "items": {"anyOf": [{"type": "string"}, {"type": "integer"}]}, "title": "Location"}, "msg": {"type": "string", "title": "Message"}, "type": {"type": "string", "title": "Error Type"}}, "title": "ValidationError"},
+      "HTTPValidationError": {"type": "object", "properties": {"detail": {"type": "array", "items": {"$ref": "#/components/schemas/ValidationError"}, "title": "Detail"}}, "title": "HTTPValidationError"}
+    },
+    "securitySchemes": {"HTTPBearer": {"type": "http", "scheme": "bearer"}}
+  }
+}
+
