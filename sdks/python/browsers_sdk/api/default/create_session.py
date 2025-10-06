@@ -13,6 +13,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     name: Union[None, Unset, str] = UNSET,
+    viewport_width: Union[None, Unset, int] = 1280,
+    viewport_height: Union[None, Unset, int] = 720,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -22,6 +24,20 @@ def _get_kwargs(
     else:
         json_name = name
     params["name"] = json_name
+
+    json_viewport_width: Union[None, Unset, int]
+    if isinstance(viewport_width, Unset):
+        json_viewport_width = UNSET
+    else:
+        json_viewport_width = viewport_width
+    params["viewport_width"] = json_viewport_width
+
+    json_viewport_height: Union[None, Unset, int]
+    if isinstance(viewport_height, Unset):
+        json_viewport_height = UNSET
+    else:
+        json_viewport_height = viewport_height
+    params["viewport_height"] = json_viewport_height
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -68,11 +84,20 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     name: Union[None, Unset, str] = UNSET,
+    viewport_width: Union[None, Unset, int] = 1280,
+    viewport_height: Union[None, Unset, int] = 720,
 ) -> Response[Union[HTTPValidationError, Session]]:
     """Create Session
 
+     Create a new browser session.
+
+    If resource limits are reached, return an existing session for the user
+    instead of failing with 500.
+
     Args:
         name (Union[None, Unset, str]):
+        viewport_width (Union[None, Unset, int]):  Default: 1280.
+        viewport_height (Union[None, Unset, int]):  Default: 720.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -84,6 +109,8 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         name=name,
+        viewport_width=viewport_width,
+        viewport_height=viewport_height,
     )
 
     response = client.get_httpx_client().request(
@@ -97,11 +124,20 @@ def sync(
     *,
     client: AuthenticatedClient,
     name: Union[None, Unset, str] = UNSET,
+    viewport_width: Union[None, Unset, int] = 1280,
+    viewport_height: Union[None, Unset, int] = 720,
 ) -> Optional[Union[HTTPValidationError, Session]]:
     """Create Session
 
+     Create a new browser session.
+
+    If resource limits are reached, return an existing session for the user
+    instead of failing with 500.
+
     Args:
         name (Union[None, Unset, str]):
+        viewport_width (Union[None, Unset, int]):  Default: 1280.
+        viewport_height (Union[None, Unset, int]):  Default: 720.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -114,6 +150,8 @@ def sync(
     return sync_detailed(
         client=client,
         name=name,
+        viewport_width=viewport_width,
+        viewport_height=viewport_height,
     ).parsed
 
 
@@ -121,11 +159,20 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     name: Union[None, Unset, str] = UNSET,
+    viewport_width: Union[None, Unset, int] = 1280,
+    viewport_height: Union[None, Unset, int] = 720,
 ) -> Response[Union[HTTPValidationError, Session]]:
     """Create Session
 
+     Create a new browser session.
+
+    If resource limits are reached, return an existing session for the user
+    instead of failing with 500.
+
     Args:
         name (Union[None, Unset, str]):
+        viewport_width (Union[None, Unset, int]):  Default: 1280.
+        viewport_height (Union[None, Unset, int]):  Default: 720.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -137,6 +184,8 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         name=name,
+        viewport_width=viewport_width,
+        viewport_height=viewport_height,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -148,11 +197,20 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     name: Union[None, Unset, str] = UNSET,
+    viewport_width: Union[None, Unset, int] = 1280,
+    viewport_height: Union[None, Unset, int] = 720,
 ) -> Optional[Union[HTTPValidationError, Session]]:
     """Create Session
 
+     Create a new browser session.
+
+    If resource limits are reached, return an existing session for the user
+    instead of failing with 500.
+
     Args:
         name (Union[None, Unset, str]):
+        viewport_width (Union[None, Unset, int]):  Default: 1280.
+        viewport_height (Union[None, Unset, int]):  Default: 720.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -166,5 +224,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             name=name,
+            viewport_width=viewport_width,
+            viewport_height=viewport_height,
         )
     ).parsed

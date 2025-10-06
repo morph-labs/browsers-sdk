@@ -3,7 +3,7 @@ name = "browsers-sdk"
 version = "0.1.0"
 description = "A client library for accessing Morph Browsers Service"
 authors = []
-requires-python = "~=3.9"
+requires-python = ">=3.9,<4.0"
 readme = "README.md"
 dependencies = [
     "httpx>=0.23.0,<0.29.0",
