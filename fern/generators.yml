@@ -18,4 +18,10 @@ groups:
         output:
           location: local-file-system
           path: ../sdks/python/browsers_sdk/gen
-
+  ts-sdk:
+    generators:
+      - name: fernapi/fern-typescript-sdk
+        version: 2.12.0
+        output:
+          location: local-file-system
+          path: ../sdks/typescript/browsers_sdk/gen
