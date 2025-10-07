@@ -6,7 +6,6 @@ import httpx
 from .core.client_wrapper import AsyncClientWrapper, SyncClientWrapper
 from .core.request_options import RequestOptions
 from .raw_client import AsyncRawMorphLabsApi, RawMorphLabsApi
-from .types.recording_list import RecordingList
 from .types.session import Session
 from .types.session_list import SessionList
 
@@ -114,13 +113,14 @@ class MorphLabsApi:
         name: typing.Optional[str] = None,
         viewport_width: typing.Optional[int] = None,
         viewport_height: typing.Optional[int] = None,
+        recording: typing.Optional[bool] = None,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> Session:
         """
         Create a new browser session.
 
-        If resource limits are reached, return an existing session for the user
-        instead of failing with 500.
+        Allocates a service resource (source of truth) and then starts an instance
+        that references this resource. If quotas are exceeded, returns 409.
 
         Parameters
         ----------
@@ -129,6 +129,8 @@ class MorphLabsApi:
         viewport_width : typing.Optional[int]
 
         viewport_height : typing.Optional[int]
+
+        recording : typing.Optional[bool]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -149,7 +151,11 @@ class MorphLabsApi:
         client.create_session()
         """
         _response = self._raw_client.create_session(
-            name=name, viewport_width=viewport_width, viewport_height=viewport_height, request_options=request_options
+            name=name,
+            viewport_width=viewport_width,
+            viewport_height=viewport_height,
+            recording=recording,
+            request_options=request_options,
         )
         return _response.data
 
@@ -339,8 +345,8 @@ class MorphLabsApi:
         """
         Branch an existing session into N replicas.
 
-        Each branched session receives a new `browsers:id` while inheriting the
-        parent's recording state via a shared `browsers:recording_id`.
+        Each branched session receives a new `browsers:id`.
+        Recording is per-session and stored under each instance's `recording` directory.
 
         Parameters
         ----------
@@ -448,54 +454,13 @@ class MorphLabsApi:
         _response = self._raw_client.share_session(id, ttl_seconds=ttl_seconds, request_options=request_options)
         return _response.data
 
-    def list_recordings(self, id: str, *, request_options: typing.Optional[RequestOptions] = None) -> RecordingList:
-        """
-        Parameters
-        ----------
-        id : str
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        RecordingList
-            Successful Response
-
-        Examples
-        --------
-        from morph_labs import MorphLabsApi
-
-        client = MorphLabsApi(
-            token="YOUR_TOKEN",
-            base_url="https://yourhost.com/path/to/api",
-        )
-        client.list_recordings(
-            id="id",
-        )
-        """
-        _response = self._raw_client.list_recordings(id, request_options=request_options)
-        return _response.data
-
-    def start_recording(
-        self,
-        id: str,
-        *,
-        recording_id: typing.Optional[str] = None,
-        name: typing.Optional[str] = None,
-        description: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
+    def stop_session_recording(
+        self, id: str, *, request_options: typing.Optional[RequestOptions] = None
     ) -> typing.Optional[typing.Any]:
         """
         Parameters
         ----------
         id : str
-
-        recording_id : typing.Optional[str]
-
-        name : typing.Optional[str]
-
-        description : typing.Optional[str]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -513,24 +478,20 @@ class MorphLabsApi:
             token="YOUR_TOKEN",
             base_url="https://yourhost.com/path/to/api",
         )
-        client.start_recording(
+        client.stop_session_recording(
             id="id",
         )
         """
-        _response = self._raw_client.start_recording(
-            id, recording_id=recording_id, name=name, description=description, request_options=request_options
-        )
+        _response = self._raw_client.stop_session_recording(id, request_options=request_options)
         return _response.data
 
-    def stop_recording(
-        self, id: str, rid: str, *, request_options: typing.Optional[RequestOptions] = None
+    def get_session_recording_events(
+        self, id: str, *, request_options: typing.Optional[RequestOptions] = None
     ) -> typing.Optional[typing.Any]:
         """
         Parameters
         ----------
         id : str
-
-        rid : str
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -548,46 +509,11 @@ class MorphLabsApi:
             token="YOUR_TOKEN",
             base_url="https://yourhost.com/path/to/api",
         )
-        client.stop_recording(
+        client.get_session_recording_events(
             id="id",
-            rid="rid",
         )
         """
-        _response = self._raw_client.stop_recording(id, rid, request_options=request_options)
-        return _response.data
-
-    def get_recording_events_raw(
-        self, id: str, rid: str, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> typing.Optional[typing.Any]:
-        """
-        Parameters
-        ----------
-        id : str
-
-        rid : str
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        typing.Optional[typing.Any]
-            Successful Response
-
-        Examples
-        --------
-        from morph_labs import MorphLabsApi
-
-        client = MorphLabsApi(
-            token="YOUR_TOKEN",
-            base_url="https://yourhost.com/path/to/api",
-        )
-        client.get_recording_events_raw(
-            id="id",
-            rid="rid",
-        )
-        """
-        _response = self._raw_client.get_recording_events_raw(id, rid, request_options=request_options)
+        _response = self._raw_client.get_session_recording_events(id, request_options=request_options)
         return _response.data
 
 
@@ -699,13 +625,14 @@ class AsyncMorphLabsApi:
         name: typing.Optional[str] = None,
         viewport_width: typing.Optional[int] = None,
         viewport_height: typing.Optional[int] = None,
+        recording: typing.Optional[bool] = None,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> Session:
         """
         Create a new browser session.
 
-        If resource limits are reached, return an existing session for the user
-        instead of failing with 500.
+        Allocates a service resource (source of truth) and then starts an instance
+        that references this resource. If quotas are exceeded, returns 409.
 
         Parameters
         ----------
@@ -714,6 +641,8 @@ class AsyncMorphLabsApi:
         viewport_width : typing.Optional[int]
 
         viewport_height : typing.Optional[int]
+
+        recording : typing.Optional[bool]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -742,7 +671,11 @@ class AsyncMorphLabsApi:
         asyncio.run(main())
         """
         _response = await self._raw_client.create_session(
-            name=name, viewport_width=viewport_width, viewport_height=viewport_height, request_options=request_options
+            name=name,
+            viewport_width=viewport_width,
+            viewport_height=viewport_height,
+            recording=recording,
+            request_options=request_options,
         )
         return _response.data
 
@@ -982,8 +915,8 @@ class AsyncMorphLabsApi:
         """
         Branch an existing session into N replicas.
 
-        Each branched session receives a new `browsers:id` while inheriting the
-        parent's recording state via a shared `browsers:recording_id`.
+        Each branched session receives a new `browsers:id`.
+        Recording is per-session and stored under each instance's `recording` directory.
 
         Parameters
         ----------
@@ -1117,64 +1050,13 @@ class AsyncMorphLabsApi:
         _response = await self._raw_client.share_session(id, ttl_seconds=ttl_seconds, request_options=request_options)
         return _response.data
 
-    async def list_recordings(
+    async def stop_session_recording(
         self, id: str, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> RecordingList:
-        """
-        Parameters
-        ----------
-        id : str
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        RecordingList
-            Successful Response
-
-        Examples
-        --------
-        import asyncio
-
-        from morph_labs import AsyncMorphLabsApi
-
-        client = AsyncMorphLabsApi(
-            token="YOUR_TOKEN",
-            base_url="https://yourhost.com/path/to/api",
-        )
-
-
-        async def main() -> None:
-            await client.list_recordings(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._raw_client.list_recordings(id, request_options=request_options)
-        return _response.data
-
-    async def start_recording(
-        self,
-        id: str,
-        *,
-        recording_id: typing.Optional[str] = None,
-        name: typing.Optional[str] = None,
-        description: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
     ) -> typing.Optional[typing.Any]:
         """
         Parameters
         ----------
         id : str
-
-        recording_id : typing.Optional[str]
-
-        name : typing.Optional[str]
-
-        description : typing.Optional[str]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -1197,27 +1079,23 @@ class AsyncMorphLabsApi:
 
 
         async def main() -> None:
-            await client.start_recording(
+            await client.stop_session_recording(
                 id="id",
             )
 
 
         asyncio.run(main())
         """
-        _response = await self._raw_client.start_recording(
-            id, recording_id=recording_id, name=name, description=description, request_options=request_options
-        )
+        _response = await self._raw_client.stop_session_recording(id, request_options=request_options)
         return _response.data
 
-    async def stop_recording(
-        self, id: str, rid: str, *, request_options: typing.Optional[RequestOptions] = None
+    async def get_session_recording_events(
+        self, id: str, *, request_options: typing.Optional[RequestOptions] = None
     ) -> typing.Optional[typing.Any]:
         """
         Parameters
         ----------
         id : str
-
-        rid : str
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -1240,55 +1118,12 @@ class AsyncMorphLabsApi:
 
 
         async def main() -> None:
-            await client.stop_recording(
+            await client.get_session_recording_events(
                 id="id",
-                rid="rid",
             )
 
 
         asyncio.run(main())
         """
-        _response = await self._raw_client.stop_recording(id, rid, request_options=request_options)
-        return _response.data
-
-    async def get_recording_events_raw(
-        self, id: str, rid: str, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> typing.Optional[typing.Any]:
-        """
-        Parameters
-        ----------
-        id : str
-
-        rid : str
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        typing.Optional[typing.Any]
-            Successful Response
-
-        Examples
-        --------
-        import asyncio
-
-        from morph_labs import AsyncMorphLabsApi
-
-        client = AsyncMorphLabsApi(
-            token="YOUR_TOKEN",
-            base_url="https://yourhost.com/path/to/api",
-        )
-
-
-        async def main() -> None:
-            await client.get_recording_events_raw(
-                id="id",
-                rid="rid",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._raw_client.get_recording_events_raw(id, rid, request_options=request_options)
+        _response = await self._raw_client.get_session_recording_events(id, request_options=request_options)
         return _response.data

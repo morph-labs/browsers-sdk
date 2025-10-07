@@ -11,7 +11,6 @@ from .core.pydantic_utilities import parse_obj_as
 from .core.request_options import RequestOptions
 from .errors.unprocessable_entity_error import UnprocessableEntityError
 from .types.http_validation_error import HttpValidationError
-from .types.recording_list import RecordingList
 from .types.session import Session
 from .types.session_list import SessionList
 
@@ -61,13 +60,14 @@ class RawMorphLabsApi:
         name: typing.Optional[str] = None,
         viewport_width: typing.Optional[int] = None,
         viewport_height: typing.Optional[int] = None,
+        recording: typing.Optional[bool] = None,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> HttpResponse[Session]:
         """
         Create a new browser session.
 
-        If resource limits are reached, return an existing session for the user
-        instead of failing with 500.
+        Allocates a service resource (source of truth) and then starts an instance
+        that references this resource. If quotas are exceeded, returns 409.
 
         Parameters
         ----------
@@ -76,6 +76,8 @@ class RawMorphLabsApi:
         viewport_width : typing.Optional[int]
 
         viewport_height : typing.Optional[int]
+
+        recording : typing.Optional[bool]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -92,6 +94,7 @@ class RawMorphLabsApi:
                 "name": name,
                 "viewport_width": viewport_width,
                 "viewport_height": viewport_height,
+                "recording": recording,
             },
             request_options=request_options,
         )
@@ -413,8 +416,8 @@ class RawMorphLabsApi:
         """
         Branch an existing session into N replicas.
 
-        Each branched session receives a new `browsers:id` while inheriting the
-        parent's recording state via a shared `browsers:recording_id`.
+        Each branched session receives a new `browsers:id`.
+        Recording is per-session and stored under each instance's `recording` directory.
 
         Parameters
         ----------
@@ -585,72 +588,13 @@ class RawMorphLabsApi:
             raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)
         raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
 
-    def list_recordings(
+    def stop_session_recording(
         self, id: str, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> HttpResponse[RecordingList]:
-        """
-        Parameters
-        ----------
-        id : str
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        HttpResponse[RecordingList]
-            Successful Response
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"session/{jsonable_encoder(id)}/recordings",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                _data = typing.cast(
-                    RecordingList,
-                    parse_obj_as(
-                        type_=RecordingList,  # type: ignore
-                        object_=_response.json(),
-                    ),
-                )
-                return HttpResponse(response=_response, data=_data)
-            if _response.status_code == 422:
-                raise UnprocessableEntityError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        HttpValidationError,
-                        parse_obj_as(
-                            type_=HttpValidationError,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)
-        raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
-
-    def start_recording(
-        self,
-        id: str,
-        *,
-        recording_id: typing.Optional[str] = None,
-        name: typing.Optional[str] = None,
-        description: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
     ) -> HttpResponse[typing.Optional[typing.Any]]:
         """
         Parameters
         ----------
         id : str
-
-        recording_id : typing.Optional[str]
-
-        name : typing.Optional[str]
-
-        description : typing.Optional[str]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -661,63 +605,7 @@ class RawMorphLabsApi:
             Successful Response
         """
         _response = self._client_wrapper.httpx_client.request(
-            f"session/{jsonable_encoder(id)}/recordings/start",
-            method="POST",
-            params={
-                "recording_id": recording_id,
-                "name": name,
-                "description": description,
-            },
-            request_options=request_options,
-        )
-        try:
-            if _response is None or not _response.text.strip():
-                return HttpResponse(response=_response, data=None)
-            if 200 <= _response.status_code < 300:
-                _data = typing.cast(
-                    typing.Optional[typing.Any],
-                    parse_obj_as(
-                        type_=typing.Optional[typing.Any],  # type: ignore
-                        object_=_response.json(),
-                    ),
-                )
-                return HttpResponse(response=_response, data=_data)
-            if _response.status_code == 422:
-                raise UnprocessableEntityError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        HttpValidationError,
-                        parse_obj_as(
-                            type_=HttpValidationError,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)
-        raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
-
-    def stop_recording(
-        self, id: str, rid: str, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> HttpResponse[typing.Optional[typing.Any]]:
-        """
-        Parameters
-        ----------
-        id : str
-
-        rid : str
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        HttpResponse[typing.Optional[typing.Any]]
-            Successful Response
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"session/{jsonable_encoder(id)}/recordings/{jsonable_encoder(rid)}/stop",
+            f"session/{jsonable_encoder(id)}/recording/stop",
             method="POST",
             request_options=request_options,
         )
@@ -749,15 +637,13 @@ class RawMorphLabsApi:
             raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)
         raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
 
-    def get_recording_events_raw(
-        self, id: str, rid: str, *, request_options: typing.Optional[RequestOptions] = None
+    def get_session_recording_events(
+        self, id: str, *, request_options: typing.Optional[RequestOptions] = None
     ) -> HttpResponse[typing.Optional[typing.Any]]:
         """
         Parameters
         ----------
         id : str
-
-        rid : str
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -768,7 +654,7 @@ class RawMorphLabsApi:
             Successful Response
         """
         _response = self._client_wrapper.httpx_client.request(
-            f"session/{jsonable_encoder(id)}/recordings/{jsonable_encoder(rid)}/events.ndjson",
+            f"session/{jsonable_encoder(id)}/recording/events.ndjson",
             method="GET",
             request_options=request_options,
         )
@@ -845,13 +731,14 @@ class AsyncRawMorphLabsApi:
         name: typing.Optional[str] = None,
         viewport_width: typing.Optional[int] = None,
         viewport_height: typing.Optional[int] = None,
+        recording: typing.Optional[bool] = None,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AsyncHttpResponse[Session]:
         """
         Create a new browser session.
 
-        If resource limits are reached, return an existing session for the user
-        instead of failing with 500.
+        Allocates a service resource (source of truth) and then starts an instance
+        that references this resource. If quotas are exceeded, returns 409.
 
         Parameters
         ----------
@@ -860,6 +747,8 @@ class AsyncRawMorphLabsApi:
         viewport_width : typing.Optional[int]
 
         viewport_height : typing.Optional[int]
+
+        recording : typing.Optional[bool]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -876,6 +765,7 @@ class AsyncRawMorphLabsApi:
                 "name": name,
                 "viewport_width": viewport_width,
                 "viewport_height": viewport_height,
+                "recording": recording,
             },
             request_options=request_options,
         )
@@ -1199,8 +1089,8 @@ class AsyncRawMorphLabsApi:
         """
         Branch an existing session into N replicas.
 
-        Each branched session receives a new `browsers:id` while inheriting the
-        parent's recording state via a shared `browsers:recording_id`.
+        Each branched session receives a new `browsers:id`.
+        Recording is per-session and stored under each instance's `recording` directory.
 
         Parameters
         ----------
@@ -1371,72 +1261,13 @@ class AsyncRawMorphLabsApi:
             raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)
         raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
 
-    async def list_recordings(
+    async def stop_session_recording(
         self, id: str, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> AsyncHttpResponse[RecordingList]:
-        """
-        Parameters
-        ----------
-        id : str
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        AsyncHttpResponse[RecordingList]
-            Successful Response
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"session/{jsonable_encoder(id)}/recordings",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                _data = typing.cast(
-                    RecordingList,
-                    parse_obj_as(
-                        type_=RecordingList,  # type: ignore
-                        object_=_response.json(),
-                    ),
-                )
-                return AsyncHttpResponse(response=_response, data=_data)
-            if _response.status_code == 422:
-                raise UnprocessableEntityError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        HttpValidationError,
-                        parse_obj_as(
-                            type_=HttpValidationError,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)
-        raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
-
-    async def start_recording(
-        self,
-        id: str,
-        *,
-        recording_id: typing.Optional[str] = None,
-        name: typing.Optional[str] = None,
-        description: typing.Optional[str] = None,
-        request_options: typing.Optional[RequestOptions] = None,
     ) -> AsyncHttpResponse[typing.Optional[typing.Any]]:
         """
         Parameters
         ----------
         id : str
-
-        recording_id : typing.Optional[str]
-
-        name : typing.Optional[str]
-
-        description : typing.Optional[str]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -1447,63 +1278,7 @@ class AsyncRawMorphLabsApi:
             Successful Response
         """
         _response = await self._client_wrapper.httpx_client.request(
-            f"session/{jsonable_encoder(id)}/recordings/start",
-            method="POST",
-            params={
-                "recording_id": recording_id,
-                "name": name,
-                "description": description,
-            },
-            request_options=request_options,
-        )
-        try:
-            if _response is None or not _response.text.strip():
-                return AsyncHttpResponse(response=_response, data=None)
-            if 200 <= _response.status_code < 300:
-                _data = typing.cast(
-                    typing.Optional[typing.Any],
-                    parse_obj_as(
-                        type_=typing.Optional[typing.Any],  # type: ignore
-                        object_=_response.json(),
-                    ),
-                )
-                return AsyncHttpResponse(response=_response, data=_data)
-            if _response.status_code == 422:
-                raise UnprocessableEntityError(
-                    headers=dict(_response.headers),
-                    body=typing.cast(
-                        HttpValidationError,
-                        parse_obj_as(
-                            type_=HttpValidationError,  # type: ignore
-                            object_=_response.json(),
-                        ),
-                    ),
-                )
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)
-        raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
-
-    async def stop_recording(
-        self, id: str, rid: str, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> AsyncHttpResponse[typing.Optional[typing.Any]]:
-        """
-        Parameters
-        ----------
-        id : str
-
-        rid : str
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        AsyncHttpResponse[typing.Optional[typing.Any]]
-            Successful Response
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"session/{jsonable_encoder(id)}/recordings/{jsonable_encoder(rid)}/stop",
+            f"session/{jsonable_encoder(id)}/recording/stop",
             method="POST",
             request_options=request_options,
         )
@@ -1535,15 +1310,13 @@ class AsyncRawMorphLabsApi:
             raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response.text)
         raise ApiError(status_code=_response.status_code, headers=dict(_response.headers), body=_response_json)
 
-    async def get_recording_events_raw(
-        self, id: str, rid: str, *, request_options: typing.Optional[RequestOptions] = None
+    async def get_session_recording_events(
+        self, id: str, *, request_options: typing.Optional[RequestOptions] = None
     ) -> AsyncHttpResponse[typing.Optional[typing.Any]]:
         """
         Parameters
         ----------
         id : str
-
-        rid : str
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -1554,7 +1327,7 @@ class AsyncRawMorphLabsApi:
             Successful Response
         """
         _response = await self._client_wrapper.httpx_client.request(
-            f"session/{jsonable_encoder(id)}/recordings/{jsonable_encoder(rid)}/events.ndjson",
+            f"session/{jsonable_encoder(id)}/recording/events.ndjson",
             method="GET",
             request_options=request_options,
         )

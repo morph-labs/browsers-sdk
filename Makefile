@@ -1,4 +1,4 @@
-BASE_URL ?= https://browsers.svc.cloud.morph.so
+BASE_URL ?= https://browsers.svc.stage.morph.so
 
 generate-python-sdk:
 	wget $(BASE_URL)/openapi.json -O fern/openapi.json

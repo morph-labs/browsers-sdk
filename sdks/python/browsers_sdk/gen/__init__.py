@@ -2,15 +2,7 @@
 
 # isort: skip_file
 
-from .types import (
-    HttpValidationError,
-    RecordingInfo,
-    RecordingList,
-    Session,
-    SessionList,
-    ValidationError,
-    ValidationErrorLocItem,
-)
+from .types import HttpValidationError, Session, SessionList, ValidationError, ValidationErrorLocItem
 from .errors import UnprocessableEntityError
 from .client import AsyncMorphLabsApi, MorphLabsApi
 
@@ -18,8 +10,6 @@ __all__ = [
     "AsyncMorphLabsApi",
     "HttpValidationError",
     "MorphLabsApi",
-    "RecordingInfo",
-    "RecordingList",
     "Session",
     "SessionList",
     "UnprocessableEntityError",

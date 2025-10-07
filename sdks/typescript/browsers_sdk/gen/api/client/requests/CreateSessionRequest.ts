@@ -10,4 +10,5 @@ export interface CreateSessionRequest {
     name?: string;
     viewport_width?: number;
     viewport_height?: number;
+    recording?: boolean;
 }

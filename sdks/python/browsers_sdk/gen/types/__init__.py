@@ -3,19 +3,9 @@
 # isort: skip_file
 
 from .http_validation_error import HttpValidationError
-from .recording_info import RecordingInfo
-from .recording_list import RecordingList
 from .session import Session
 from .session_list import SessionList
 from .validation_error import ValidationError
 from .validation_error_loc_item import ValidationErrorLocItem
 
-__all__ = [
-    "HttpValidationError",
-    "RecordingInfo",
-    "RecordingList",
-    "Session",
-    "SessionList",
-    "ValidationError",
-    "ValidationErrorLocItem",
-]
+__all__ = ["HttpValidationError", "Session", "SessionList", "ValidationError", "ValidationErrorLocItem"]

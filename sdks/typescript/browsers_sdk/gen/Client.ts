@@ -113,8 +113,8 @@ export class MorphLabsApiClient {
     /**
      * Create a new browser session.
      *
-     * If resource limits are reached, return an existing session for the user
-     * instead of failing with 500.
+     * Allocates a service resource (source of truth) and then starts an instance
+     * that references this resource. If quotas are exceeded, returns 409.
      *
      * @param {MorphLabsApi.CreateSessionRequest} request
      * @param {MorphLabsApiClient.RequestOptions} requestOptions - Request-specific configuration.
@@ -135,7 +135,7 @@ export class MorphLabsApiClient {
         request: MorphLabsApi.CreateSessionRequest = {},
         requestOptions?: MorphLabsApiClient.RequestOptions,
     ): Promise<core.WithRawResponse<MorphLabsApi.Session>> {
-        const { name, viewport_width: viewportWidth, viewport_height: viewportHeight } = request;
+        const { name, viewport_width: viewportWidth, viewport_height: viewportHeight, recording } = request;
         const _queryParams: Record<string, string | string[] | object | object[] | null> = {};
         if (name != null) {
             _queryParams["name"] = name;
@@ -147,6 +147,10 @@ export class MorphLabsApiClient {
 
         if (viewportHeight != null) {
             _queryParams["viewport_height"] = viewportHeight.toString();
+        }
+
+        if (recording != null) {
+            _queryParams["recording"] = recording.toString();
         }
 
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -661,8 +665,8 @@ export class MorphLabsApiClient {
     /**
      * Branch an existing session into N replicas.
      *
-     * Each branched session receives a new `browsers:id` while inheriting the
-     * parent's recording state via a shared `browsers:recording_id`.
+     * Each branched session receives a new `browsers:id`.
+     * Recording is per-session and stored under each instance's `recording` directory.
      *
      * @param {string} id
      * @param {MorphLabsApi.BranchSessionRequest} request
@@ -922,191 +926,17 @@ export class MorphLabsApiClient {
      * @throws {@link MorphLabsApi.UnprocessableEntityError}
      *
      * @example
-     *     await client.listRecordings("id")
+     *     await client.stopSessionRecording("id")
      */
-    public listRecordings(
+    public stopSessionRecording(
         id: string,
-        requestOptions?: MorphLabsApiClient.RequestOptions,
-    ): core.HttpResponsePromise<MorphLabsApi.RecordingList> {
-        return core.HttpResponsePromise.fromPromise(this.__listRecordings(id, requestOptions));
-    }
-
-    private async __listRecordings(
-        id: string,
-        requestOptions?: MorphLabsApiClient.RequestOptions,
-    ): Promise<core.WithRawResponse<MorphLabsApi.RecordingList>> {
-        let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
-            this._options?.headers,
-            mergeOnlyDefinedHeaders({ Authorization: await this._getAuthorizationHeader() }),
-            requestOptions?.headers,
-        );
-        const _response = await core.fetcher({
-            url: core.url.join(
-                (await core.Supplier.get(this._options.baseUrl)) ??
-                    (await core.Supplier.get(this._options.environment)),
-                `session/${encodeURIComponent(id)}/recordings`,
-            ),
-            method: "GET",
-            headers: _headers,
-            queryParameters: requestOptions?.queryParams,
-            timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1000 : 60000,
-            maxRetries: requestOptions?.maxRetries,
-            abortSignal: requestOptions?.abortSignal,
-        });
-        if (_response.ok) {
-            return { data: _response.body as MorphLabsApi.RecordingList, rawResponse: _response.rawResponse };
-        }
-
-        if (_response.error.reason === "status-code") {
-            switch (_response.error.statusCode) {
-                case 422:
-                    throw new MorphLabsApi.UnprocessableEntityError(
-                        _response.error.body as MorphLabsApi.HttpValidationError,
-                        _response.rawResponse,
-                    );
-                default:
-                    throw new errors.MorphLabsApiError({
-                        statusCode: _response.error.statusCode,
-                        body: _response.error.body,
-                        rawResponse: _response.rawResponse,
-                    });
-            }
-        }
-
-        switch (_response.error.reason) {
-            case "non-json":
-                throw new errors.MorphLabsApiError({
-                    statusCode: _response.error.statusCode,
-                    body: _response.error.rawBody,
-                    rawResponse: _response.rawResponse,
-                });
-            case "timeout":
-                throw new errors.MorphLabsApiTimeoutError(
-                    "Timeout exceeded when calling GET /session/{id}/recordings.",
-                );
-            case "unknown":
-                throw new errors.MorphLabsApiError({
-                    message: _response.error.errorMessage,
-                    rawResponse: _response.rawResponse,
-                });
-        }
-    }
-
-    /**
-     * @param {string} id
-     * @param {MorphLabsApi.StartRecordingRequest} request
-     * @param {MorphLabsApiClient.RequestOptions} requestOptions - Request-specific configuration.
-     *
-     * @throws {@link MorphLabsApi.UnprocessableEntityError}
-     *
-     * @example
-     *     await client.startRecording("id")
-     */
-    public startRecording(
-        id: string,
-        request: MorphLabsApi.StartRecordingRequest = {},
         requestOptions?: MorphLabsApiClient.RequestOptions,
     ): core.HttpResponsePromise<unknown> {
-        return core.HttpResponsePromise.fromPromise(this.__startRecording(id, request, requestOptions));
+        return core.HttpResponsePromise.fromPromise(this.__stopSessionRecording(id, requestOptions));
     }
 
-    private async __startRecording(
+    private async __stopSessionRecording(
         id: string,
-        request: MorphLabsApi.StartRecordingRequest = {},
-        requestOptions?: MorphLabsApiClient.RequestOptions,
-    ): Promise<core.WithRawResponse<unknown>> {
-        const { recording_id: recordingId, name, description } = request;
-        const _queryParams: Record<string, string | string[] | object | object[] | null> = {};
-        if (recordingId != null) {
-            _queryParams["recording_id"] = recordingId;
-        }
-
-        if (name != null) {
-            _queryParams["name"] = name;
-        }
-
-        if (description != null) {
-            _queryParams["description"] = description;
-        }
-
-        let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
-            this._options?.headers,
-            mergeOnlyDefinedHeaders({ Authorization: await this._getAuthorizationHeader() }),
-            requestOptions?.headers,
-        );
-        const _response = await core.fetcher({
-            url: core.url.join(
-                (await core.Supplier.get(this._options.baseUrl)) ??
-                    (await core.Supplier.get(this._options.environment)),
-                `session/${encodeURIComponent(id)}/recordings/start`,
-            ),
-            method: "POST",
-            headers: _headers,
-            queryParameters: { ..._queryParams, ...requestOptions?.queryParams },
-            timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1000 : 60000,
-            maxRetries: requestOptions?.maxRetries,
-            abortSignal: requestOptions?.abortSignal,
-        });
-        if (_response.ok) {
-            return { data: _response.body, rawResponse: _response.rawResponse };
-        }
-
-        if (_response.error.reason === "status-code") {
-            switch (_response.error.statusCode) {
-                case 422:
-                    throw new MorphLabsApi.UnprocessableEntityError(
-                        _response.error.body as MorphLabsApi.HttpValidationError,
-                        _response.rawResponse,
-                    );
-                default:
-                    throw new errors.MorphLabsApiError({
-                        statusCode: _response.error.statusCode,
-                        body: _response.error.body,
-                        rawResponse: _response.rawResponse,
-                    });
-            }
-        }
-
-        switch (_response.error.reason) {
-            case "non-json":
-                throw new errors.MorphLabsApiError({
-                    statusCode: _response.error.statusCode,
-                    body: _response.error.rawBody,
-                    rawResponse: _response.rawResponse,
-                });
-            case "timeout":
-                throw new errors.MorphLabsApiTimeoutError(
-                    "Timeout exceeded when calling POST /session/{id}/recordings/start.",
-                );
-            case "unknown":
-                throw new errors.MorphLabsApiError({
-                    message: _response.error.errorMessage,
-                    rawResponse: _response.rawResponse,
-                });
-        }
-    }
-
-    /**
-     * @param {string} id
-     * @param {string} rid
-     * @param {MorphLabsApiClient.RequestOptions} requestOptions - Request-specific configuration.
-     *
-     * @throws {@link MorphLabsApi.UnprocessableEntityError}
-     *
-     * @example
-     *     await client.stopRecording("id", "rid")
-     */
-    public stopRecording(
-        id: string,
-        rid: string,
-        requestOptions?: MorphLabsApiClient.RequestOptions,
-    ): core.HttpResponsePromise<unknown> {
-        return core.HttpResponsePromise.fromPromise(this.__stopRecording(id, rid, requestOptions));
-    }
-
-    private async __stopRecording(
-        id: string,
-        rid: string,
         requestOptions?: MorphLabsApiClient.RequestOptions,
     ): Promise<core.WithRawResponse<unknown>> {
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -1118,7 +948,7 @@ export class MorphLabsApiClient {
             url: core.url.join(
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)),
-                `session/${encodeURIComponent(id)}/recordings/${encodeURIComponent(rid)}/stop`,
+                `session/${encodeURIComponent(id)}/recording/stop`,
             ),
             method: "POST",
             headers: _headers,
@@ -1156,7 +986,7 @@ export class MorphLabsApiClient {
                 });
             case "timeout":
                 throw new errors.MorphLabsApiTimeoutError(
-                    "Timeout exceeded when calling POST /session/{id}/recordings/{rid}/stop.",
+                    "Timeout exceeded when calling POST /session/{id}/recording/stop.",
                 );
             case "unknown":
                 throw new errors.MorphLabsApiError({
@@ -1168,25 +998,22 @@ export class MorphLabsApiClient {
 
     /**
      * @param {string} id
-     * @param {string} rid
      * @param {MorphLabsApiClient.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @throws {@link MorphLabsApi.UnprocessableEntityError}
      *
      * @example
-     *     await client.getRecordingEventsRaw("id", "rid")
+     *     await client.getSessionRecordingEvents("id")
      */
-    public getRecordingEventsRaw(
+    public getSessionRecordingEvents(
         id: string,
-        rid: string,
         requestOptions?: MorphLabsApiClient.RequestOptions,
     ): core.HttpResponsePromise<unknown> {
-        return core.HttpResponsePromise.fromPromise(this.__getRecordingEventsRaw(id, rid, requestOptions));
+        return core.HttpResponsePromise.fromPromise(this.__getSessionRecordingEvents(id, requestOptions));
     }
 
-    private async __getRecordingEventsRaw(
+    private async __getSessionRecordingEvents(
         id: string,
-        rid: string,
         requestOptions?: MorphLabsApiClient.RequestOptions,
     ): Promise<core.WithRawResponse<unknown>> {
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -1198,7 +1025,7 @@ export class MorphLabsApiClient {
             url: core.url.join(
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)),
-                `session/${encodeURIComponent(id)}/recordings/${encodeURIComponent(rid)}/events.ndjson`,
+                `session/${encodeURIComponent(id)}/recording/events.ndjson`,
             ),
             method: "GET",
             headers: _headers,
@@ -1236,7 +1063,7 @@ export class MorphLabsApiClient {
                 });
             case "timeout":
                 throw new errors.MorphLabsApiTimeoutError(
-                    "Timeout exceeded when calling GET /session/{id}/recordings/{rid}/events.ndjson.",
+                    "Timeout exceeded when calling GET /session/{id}/recording/events.ndjson.",
                 );
             case "unknown":
                 throw new errors.MorphLabsApiError({
