@@ -1,5 +1,5 @@
 {
-  "name": "browsers-sdk",
+  "name": "@morphlabs/browsers-sdk",
   "version": "0.1.0",
   "description": "Browsers plugin for MorphCloud SDK",
   "main": "./dist/main.cjs",
