@@ -11,6 +11,9 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { HTTPValidationError } from './models/HTTPValidationError';
+export type { MetadataUpdateRequest } from './models/MetadataUpdateRequest';
+export type { RecordingInfo } from './models/RecordingInfo';
+export type { RecordingList } from './models/RecordingList';
 export type { Session } from './models/Session';
 export type { SessionList } from './models/SessionList';
 export type { ValidationError } from './models/ValidationError';
