@@ -1,0 +1,40 @@
+{
+  "name": "browsers-sdk",
+  "version": "0.1.0",
+  "description": "Browsers plugin for MorphCloud SDK",
+  "main": "./dist/main.cjs",
+  "module": "./dist/main.mjs",
+  "types": "./dist/main.d.ts",
+  "files": [
+    "dist",
+    "browsers_sdk"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/main.d.ts",
+      "import": "./dist/main.mjs",
+      "require": "./dist/main.cjs"
+    },
+    "./dist/main.cjs": "./dist/main.cjs",
+    "./dist/main.mjs": "./dist/main.mjs",
+    "./package.json": "./package.json"
+  },
+  "morphcloud": {
+    "plugin": true,
+    "loader": "dist/main.cjs"
+  },
+  "scripts": {
+    "build": "tsup",
+    "prepare": "npm run build",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean"
+  },
+  "peerDependencies": {
+    "morphcloud": "^0.0.19"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.7.2"
+  }
+}
